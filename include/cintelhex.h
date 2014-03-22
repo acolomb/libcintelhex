@@ -176,6 +176,18 @@ int ihex_check_record(ihex_record_t *r);
  *  @return    0 on success, an error code otherwise. */
 int ihex_mem_copy(ihex_recordset_t *rs, void* dst, ulong_t n, ihex_width_t w, ihex_byteorder_t o);
 
+/// Copy the content of a record set word-wise.
+/** This method copies the content of a record set to a certain
+ *  location in memory.
+ * 
+ *  @param rs  The record set that is to be copied.
+ *  @param dst A pointer to the destination address.
+ *  @param n   The size of the allocated target area.
+ *  @param w   The width of data words to be copied.
+ *  @param o   Defines whether data words are big or little endian.
+ *  @return    0 on success, an error code otherwise. */
+int ihex_word_copy(ihex_recordset_t *rs, void* dst, ulong_t n, ihex_width_t w, ihex_byteorder_t o);
+
 /// Copy the content of a record set byte-wise.
 /** This method copies the content of a record set to a certain
  *  location in memory.  In contrast to ihex_mem_copy(), the
