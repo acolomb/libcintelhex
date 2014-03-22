@@ -123,6 +123,70 @@ int ihex_mem_copy(ihex_recordset_t *rs, void* dst, ulong_t n,
 	return 0;
 }
 
+int ihex_byte_copy(ihex_recordset_t *rs, char *dst, size_t n)
+{
+	uint_t   i, j;
+	uint32_t offset = 0x00, address = 0x00;
+	
+	ihex_record_t *x;
+	
+	for (i = 0; i < rs->ihrs_count; i ++)
+	{
+		x       = (rs->ihrs_records + i);
+		address = (offset + x->ihr_address);
+		
+		switch (x->ihr_type)
+		{
+			case IHEX_DATA:
+				for (j = 0; j < x->ihr_length; j ++)
+				{
+					// Skip to next record if address is out of target range
+					if (address + j >= n) break;
+					dst[address + j] = x->ihr_data[j];
+					
+					#ifdef IHEX_DEBUG
+					printf("%08x -> %08x\n", address + j, dst[address + j]);
+					#endif
+				}
+				break;
+			case IHEX_EOF:
+				if (i < rs->ihrs_count - 1)
+				{
+					IHEX_SET_ERROR_RETURN(IHEX_ERR_PREMATURE_EOF,
+						"Premature EOF in record %i", i + 1);
+				}
+				else
+				{
+					return 0;
+				}
+			case IHEX_ESA:
+				offset = *(x->ihr_data) << 4;
+				
+				#ifdef IHEX_DEBUG
+				printf("Switched offset to 0x%08x.\n", offset);
+				#endif
+				
+				break;
+			case IHEX_ELA:
+				offset = (x->ihr_data[0] << 24) + (x->ihr_data[1] << 16);
+				
+				#ifdef IHEX_DEBUG
+				printf("Switched offset to 0x%08x.\n", offset);
+				#endif
+				
+				break;
+			case IHEX_SSA:
+				break;
+			default:
+				IHEX_SET_ERROR_RETURN(IHEX_ERR_UNKNOWN_RECORD_TYPE,
+					"Unknown record type in record %i: 0x%02x",
+					i+1, x->ihr_type);
+		}
+	}
+	
+	return 0;
+}
+
 int ihex_mem_zero(void* dst, ulong_t n)
 {
 #ifdef HAVE_MEMSET
