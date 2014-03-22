@@ -35,6 +35,11 @@ extern "C"
 {
 #endif
 
+// API attributes
+#ifndef IHEX_DEPRECATED
+#define IHEX_DEPRECATED __attribute__((deprecated))
+#endif
+
 // CONSTANT DEFINITIONS
 
 #define IHEX_ERR_INCORRECT_CHECKSUM   0x01
@@ -174,7 +179,8 @@ int ihex_check_record(ihex_record_t *r);
  *  @param w   The width of data words to be copied.
  *  @param o   Defines whether data words are big or little endian.
  *  @return    0 on success, an error code otherwise. */
-int ihex_mem_copy(ihex_recordset_t *rs, void* dst, ulong_t n, ihex_width_t w, ihex_byteorder_t o);
+int ihex_mem_copy(ihex_recordset_t *rs, void* dst, ulong_t n, ihex_width_t w, ihex_byteorder_t o)
+    IHEX_DEPRECATED;
 
 /// Copy the content of a record set byte-wise.
 /** This method copies the content of a record set to a certain
