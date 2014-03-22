@@ -123,12 +123,18 @@ int ihex_mem_copy(ihex_recordset_t *rs, void* dst, ulong_t n,
 	return 0;
 }
 
-int ihex_byte_copy(ihex_recordset_t *rs, char *dst, size_t n)
+int ihex_byte_copy(ihex_recordset_t *rs, char *dst, size_t n, size_t off)
 {
 	uint_t   i, j;
 	uint32_t offset = 0x00, address = 0x00;
 	
 	ihex_record_t *x;
+	
+	//FIXME if (off >= ihex_rs_get_max_address(rs))
+	//FIXME{
+	//FIXME	IHEX_SET_ERROR_RETURN(IHEX_ERR_ADDRESS_OUT_OF_RANGE,
+	//FIXME			      "Offset 0x%08x is out of range", off);
+	//FIXME}
 	
 	for (i = 0; i < rs->ihrs_count; i ++)
 	{
@@ -141,11 +147,12 @@ int ihex_byte_copy(ihex_recordset_t *rs, char *dst, size_t n)
 				for (j = 0; j < x->ihr_length; j ++)
 				{
 					// Skip to next record if address is out of target range
-					if (address + j >= n) break;
-					dst[address + j] = x->ihr_data[j];
+					if (address + j < off || address + j - off >= n) break;
+					dst[address + j - off] = x->ihr_data[j];
 					
 					#ifdef IHEX_DEBUG
-					printf("%08x -> %08x\n", address + j, dst[address + j]);
+					printf("%08x -> %08x\n", address + j,
+					       dst[address + j - off]);
 					#endif
 				}
 				break;

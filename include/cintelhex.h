@@ -181,13 +181,15 @@ int ihex_mem_copy(ihex_recordset_t *rs, void* dst, ulong_t n, ihex_width_t w, ih
  *  location in memory.  In contrast to ihex_mem_copy(), the
  *  destination memory is not zeroed first.  Any record contents whose
  *  address lies outside the given destination range are silently
- *  skipped.
+ *  skipped.  An offset causes the copy to start at the specified
+ *  address within the source data.
  * 
  *  @param rs  The record set that is to be copied.
  *  @param dst A pointer to the destination address.
  *  @param n   The size of the allocated target area.
+ *  @param off Offset address from where to start the copy.
  *  @return    0 on success, an error code otherwise. */
-int ihex_byte_copy(ihex_recordset_t *rs, char *dst, size_t n);
+int ihex_byte_copy(ihex_recordset_t *rs, char *dst, size_t n, size_t off);
 
 /// Fill a memory area with zeroes.
 /** This method fills a whole memory area with zeros.
