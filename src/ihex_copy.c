@@ -141,10 +141,14 @@ int ihex_byte_copy(ihex_recordset_t *rs, char *dst, size_t n, size_t off)
 		{
 			case IHEX_DATA:
 				if (address + x->ihr_length > max) max = address + x->ihr_length;
-				for (j = 0; j < x->ihr_length; j ++)
+				// Skip record if its last address lies before the target range
+				if (address + x->ihr_length < off) break;
+				// Skip bytes until start of target range
+				j = (off > address) ? off - address : 0;
+				for (; j < x->ihr_length; j ++)
 				{
-					// Skip to next record if address is out of target range
-					if (address + j < off || address + j - off >= n) break;
+					// Skip the rest of the content beyond target range
+					if (address + j - off >= n) break;
 					dst[address + j - off] = x->ihr_data[j];
 					
 					#ifdef IHEX_DEBUG
