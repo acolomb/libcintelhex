@@ -177,15 +177,47 @@ int ihex_check_record(ihex_record_t *r);
 int ihex_mem_copy(ihex_recordset_t *rs, void* dst, ulong_t n, ihex_width_t w, ihex_byteorder_t o);
 
 /// Copy the content of a record set word-wise.
-/** This method copies the content of a record set to a certain
- *  location in memory.
+/** This method copies the content of a record set to an array of
+ *  8-bit words in memory.
  * 
  *  @param rs  The record set that is to be copied.
  *  @param dst A pointer to the destination address.
- *  @param n   The size of the allocated target area.
+ *  @param n   The number of elements in the target array.
+ *  @return    0 on success, an error code otherwise. */
+int ihex_word8_copy(ihex_recordset_t *rs, uint8_t *dst, size_t n);
+
+/// Copy the content of a record set word-wise in 16-bit blocks.
+/** This method copies the content of a record set to an array of
+ *  16-bit words in memory.
+ * 
+ *  @param rs  The record set that is to be copied.
+ *  @param dst A pointer to the destination address.
+ *  @param n   The number of elements in the target array.
  *  @param o   Defines whether data words are big or little endian.
  *  @return    0 on success, an error code otherwise. */
 int ihex_word16_copy(ihex_recordset_t *rs, uint16_t *dst, size_t n, ihex_byteorder_t o);
+
+/// Copy the content of a record set word-wise in 32-bit blocks.
+/** This method copies the content of a record set to an array of
+ *  32-bit words in memory.
+ * 
+ *  @param rs  The record set that is to be copied.
+ *  @param dst A pointer to the destination address.
+ *  @param n   The number of elements in the target array.
+ *  @param o   Defines whether data words are big or little endian.
+ *  @return    0 on success, an error code otherwise. */
+int ihex_word32_copy(ihex_recordset_t *rs, uint32_t *dst, size_t n, ihex_byteorder_t o);
+
+/// Copy the content of a record set word-wise in 64-bit blocks.
+/** This method copies the content of a record set to an array of
+ *  64-bit words in memory.
+ * 
+ *  @param rs  The record set that is to be copied.
+ *  @param dst A pointer to the destination address.
+ *  @param n   The number of elements in the target array.
+ *  @param o   Defines whether data words are big or little endian.
+ *  @return    0 on success, an error code otherwise. */
+int ihex_word64_copy(ihex_recordset_t *rs, uint64_t *dst, size_t n, ihex_byteorder_t o);
 
 /// Copy the content of a record set byte-wise.
 /** This method copies the content of a record set to a certain
