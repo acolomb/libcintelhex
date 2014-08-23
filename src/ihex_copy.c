@@ -90,78 +90,46 @@ int ihex_mem_copy(ihex_recordset_t *rs, void* dst, ulong_t n,
 
 int ihex_byte_copy(ihex_recordset_t *rs, char *dst, size_t n, size_t off)
 {
-	uint_t   i, j;
+	int r;
+	uint_t   i = 0, j;
 	uint32_t offset = 0x00, address = 0x00, min = UINT32_MAX, max = 0;
 	
 	ihex_record_t *x;
 	
-	for (i = 0; i < rs->ihrs_count; i ++)
-	{
-		x       = (rs->ihrs_records + i);
-		address = (offset + x->ihr_address);
+	do {
+		r = ihex_rs_iterate_data(rs, &i, &x, &offset);
+		if (r) return r;
 		
+		address = (offset + x->ihr_address);
 		if (address < min) min = address;
 		
-		switch (x->ihr_type)
-		{
-			case IHEX_DATA:
-				if (address + x->ihr_length > max) max = address + x->ihr_length;
-				// Skip record if its last address lies before the target range
-				if (address + x->ihr_length < off) break;
-				// Skip bytes until start of target range
-				j = (off > address) ? off - address : 0;
-				for (; j < x->ihr_length; j ++)
-				{
-					// Skip the rest of the content beyond target range
-					if (address + j - off >= n) break;
-					dst[address + j - off] = x->ihr_data[j];
-					
-					#ifdef IHEX_DEBUG
-					printf("%08x -> %08x\n", address + j,
-					       dst[address + j - off]);
-					#endif
-				}
-				break;
-			case IHEX_EOF:
-				if (i < rs->ihrs_count - 1)
-				{
-					IHEX_SET_ERROR_RETURN(IHEX_ERR_PREMATURE_EOF,
-						"Premature EOF in record %i", i + 1);
-				}
-				else if (off + n < min || off >= max)
-				{
-					IHEX_SET_ERROR_RETURN(IHEX_ERR_ADDRESS_OUT_OF_RANGE,
-						"No data in range 0x%08zx to 0x%08zx",
-						off, off + n);
-				}
-				else
-				{
-					return 0;
-				}
-			case IHEX_ESA:
-				offset = *(x->ihr_data) << 4;
-				
-				#ifdef IHEX_DEBUG
-				printf("Switched offset to 0x%08x.\n", offset);
-				#endif
-				
-				break;
-			case IHEX_ELA:
-				offset = (x->ihr_data[0] << 24) + (x->ihr_data[1] << 16);
-				
-				#ifdef IHEX_DEBUG
-				printf("Switched offset to 0x%08x.\n", offset);
-				#endif
-				
-				break;
-			case IHEX_SSA:
-				break;
-			default:
-				IHEX_SET_ERROR_RETURN(IHEX_ERR_UNKNOWN_RECORD_TYPE,
-					"Unknown record type in record %i: 0x%02x",
-					i+1, x->ihr_type);
+		if (x == 0) {
+			if (off + n < min || off >= max)
+			{
+				IHEX_SET_ERROR_RETURN(IHEX_ERR_ADDRESS_OUT_OF_RANGE,
+					"No data in range 0x%08zx to 0x%08zx",
+					off, off + n);
+			}
+			break;
 		}
-	}
+		
+		if (address + x->ihr_length > max) max = address + x->ihr_length;
+		// Skip record if its last address lies before the target range
+		if (address + x->ihr_length < off) break;
+		// Skip bytes until start of target range
+		j = (off > address) ? off - address : 0;
+		for (; j < x->ihr_length; j ++)
+		{
+			// Skip the rest of the content beyond target range
+			if (address + j - off >= n) break;
+			dst[address + j - off] = x->ihr_data[j];
+			
+			#ifdef IHEX_DEBUG
+			printf("%08x -> %08x\n", address + j,
+			       dst[address + j - off]);
+			#endif
+		}
+	} while (i > 0);
 	
 	return 0;
 }
