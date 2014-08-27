@@ -51,6 +51,7 @@ extern "C"
 #define IHEX_ERR_MMAP_FAILED          0x09
 #define IHEX_ERR_READ_FAILED          0x0B
 #define IHEX_ERR_MALLOC_FAILED        0x0A
+#define IHEX_ERR_RECORD_NOT_ALIGNED   0x0B
 
 // TYPE DEFINITIONS
 
@@ -222,6 +223,18 @@ int ihex_check_record(ihex_record_t *r);
  *  @param o   Defines whether data words are big or little endian.
  *  @return    0 on success, an error code otherwise. */
 int ihex_mem_copy(ihex_recordset_t *rs, void* dst, ulong_t n, ihex_width_t w, ihex_byteorder_t o);
+
+/// Copy the content of a record set word-wise.
+/** This method copies the content of a record set to an array of
+ *  words in memory.  The word size is determined by the platform's
+ *  native size of the int type.
+ * 
+ *  @param rs  The record set that is to be copied.
+ *  @param dst A pointer to the destination address.
+ *  @param n   The number of elements in the target array.
+ *  @param o   Defines whether data words are big or little endian in the recordset.
+ *  @return    0 on success, an error code otherwise. */
+int ihex_word_copy(ihex_recordset_t *rs, uint_t *dst, size_t n, ihex_byteorder_t o);
 
 /// Fill a memory area with zeroes.
 /** This method fills a whole memory area with zeros.
