@@ -134,6 +134,71 @@ int ihex_byte_copy(ihex_recordset_t *rs, char *dst, size_t n, size_t off)
 	return 0;
 }
 
+int ihex_word8_copy(ihex_recordset_t *rs, uint8_t *dst, size_t n)
+{
+	return ihex_byte_copy(rs, (char*) dst, n, 0);
+}
+
+#define ALIGNMENT_CHECK(start, length, align)				\
+	if ((start) % (align) != 0) {					\
+		IHEX_SET_ERROR_RETURN(					\
+			IHEX_ERR_RECORD_NOT_ALIGNED,			\
+			"Record address 0x%08x misaligned for requested data type", \
+			(start));					\
+	} else if ((length) % (align) != 0) {				\
+		IHEX_SET_ERROR_RETURN(					\
+			IHEX_ERR_RECORD_NOT_ALIGNED,			\
+			"Record length 0x%08x does not match requested data type", \
+			(length));					\
+	}
+
+int ihex_word16_copy(ihex_recordset_t *rs, uint16_t *dst, size_t n, ihex_byteorder_t o)
+{
+	uint_t   i = 0;
+	uint32_t offset = 0x00, address;
+	
+	ihex_record_t *x;
+	
+	do {
+		int r = ihex_rs_iterate_data(rs, &i, &x, &offset);
+		if (r) return r;
+		else if (x == 0) break;
+		
+		address = (offset + x->ihr_address);
+		ALIGNMENT_CHECK(address, x->ihr_length, sizeof(*dst))
+		/* if (address % sizeof(*dst) != 0) { */
+		/* 	IHEX_SET_ERROR_RETURN(IHEX_ERR_RECORD_NOT_ALIGNED, */
+		/* 		"Record address 0x%08x misaligned for requested data type", */
+		/* 		address); */
+		/* } else if (x->ihr_length % sizeof(*dst) != 0) { */
+		/* 	IHEX_SET_ERROR_RETURN(IHEX_ERR_RECORD_NOT_ALIGNED, */
+		/* 		"Record length 0x%08x does not match requested data type", */
+		/* 		x->ihr_length); */
+		/* } */
+		
+		for (uint_t j = 0; j < x->ihr_length; j += sizeof(*dst))
+		{
+			size_t element = (address + j) / sizeof(*dst);
+			if (element >= n) break;
+			uint16_t  v      = 0;
+			
+			for (uint_t l = 0; l < sizeof(*dst); ++l)
+			{
+				v += x->ihr_data[j + l] << (8 * ((o == IHEX_ORDER_BIGENDIAN)
+								 ? ((sizeof(*dst) - 1) - l)
+								 : l));
+			}
+			dst[element] = v;
+			
+			#ifdef IHEX_DEBUG
+			printf("%08x -> %08x = %08x\n", address + j, v, dst[element]);
+			#endif
+		}
+	} while (i > 0);
+	
+	return 0;
+}
+
 int ihex_mem_zero(void* dst, ulong_t n)
 {
 #ifdef HAVE_MEMSET
