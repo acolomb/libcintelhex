@@ -51,6 +51,7 @@ extern "C"
 #define IHEX_ERR_MMAP_FAILED          0x09
 #define IHEX_ERR_READ_FAILED          0x0B
 #define IHEX_ERR_MALLOC_FAILED        0x0A
+#define IHEX_ERR_RECORD_NOT_ALIGNED   0x0B
 
 // TYPE DEFINITIONS
 
