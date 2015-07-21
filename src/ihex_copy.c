@@ -88,6 +88,52 @@ int ihex_mem_copy(ihex_recordset_t *rs, void* dst, ulong_t n,
 	return 0;
 }
 
+int ihex_byte_copy(ihex_recordset_t *rs, char *dst, size_t n, size_t off)
+{
+	int r;
+	uint_t   i = 0, j;
+	uint32_t offset = 0x00, address = 0x00, min = UINT32_MAX, max = 0;
+	
+	ihex_record_t *x;
+	
+	do {
+		r = ihex_rs_iterate_data(rs, &i, &x, &offset);
+		if (r) return r;
+		
+		address = (offset + x->ihr_address);
+		if (address < min) min = address;
+		
+		if (x == 0) {
+			if (off + n < min || off >= max)
+			{
+				IHEX_SET_ERROR_RETURN(IHEX_ERR_ADDRESS_OUT_OF_RANGE,
+					"No data in range 0x%08zx to 0x%08zx",
+					off, off + n);
+			}
+			break;
+		}
+		
+		if (address + x->ihr_length > max) max = address + x->ihr_length;
+		// Skip record if its last address lies before the target range
+		if (address + x->ihr_length < off) break;
+		// Skip bytes until start of target range
+		j = (off > address) ? off - address : 0;
+		for (; j < x->ihr_length; j ++)
+		{
+			// Skip the rest of the content beyond target range
+			if (address + j - off >= n) break;
+			dst[address + j - off] = x->ihr_data[j];
+			
+			#ifdef IHEX_DEBUG
+			printf("%08x -> %08x\n", address + j,
+			       dst[address + j - off]);
+			#endif
+		}
+	} while (i > 0);
+	
+	return 0;
+}
+
 int ihex_mem_zero(void* dst, ulong_t n)
 {
 #ifdef HAVE_MEMSET
