@@ -38,14 +38,16 @@
 
 #define IHEX_CHR_RECORDMARK 0x3A
 
-#define IHEX_SET_ERROR(errno, error, ...) \
+#define IHEX_SET_ERROR(errnum, error, ...) \
 	{ char *e = malloc(512); \
 	  snprintf(e, 512, error, ##__VA_ARGS__); \
-	  ihex_last_errno = errno; \
-	  ihex_last_error = e; }
-#define IHEX_SET_ERROR_RETURN(errno, error, ...) \
-	{ IHEX_SET_ERROR(errno, error, ##__VA_ARGS__); \
-	  return errno; }
+	  ihex_set_error(errnum, e); }
+#define IHEX_SET_ERROR_RETURN(errnum, error, ...) \
+	{ IHEX_SET_ERROR(errnum, error, ##__VA_ARGS__); \
+	  return errnum; }
+
+
+void ihex_set_error(ihex_error_t errnum, char* error);
 
 static int ihex_parse_single_record(ihex_rdata_t data, unsigned int length, ihex_record_t* record);
 
@@ -85,10 +87,17 @@ ihex_recordset_t* ihex_rs_from_file(const char* filename)
 		goto malloc_failed;
 	}
 
-	if (read(fd, c, l) != l)
+	ulong_t rest = l;
+	while (rest > 0)
 	{
-		IHEX_SET_ERROR(IHEX_ERR_READ_FAILED, "Could not read file %s", filename);
-		goto read_failed;
+		ssize_t bytes = read(fd, c + (l - rest), rest);
+		if (bytes < 0)
+		{
+			IHEX_SET_ERROR(IHEX_ERR_READ_FAILED, "Could not read file %s", filename);
+			goto read_failed;
+		}
+		else if (bytes == 0) break;	//end of file
+		rest -= bytes;
 	}
 #endif
 	
@@ -284,9 +293,9 @@ char* ihex_error()
 	return ihex_last_error;
 }
 
-void ihex_set_error(ihex_error_t errno, char* error)
+void ihex_set_error(ihex_error_t errnum, char* error)
 {
-	ihex_last_errno = errno;
+	ihex_last_errno = errnum;
 	ihex_last_error = error;
 				
 	#ifdef IHEX_DEBUG
