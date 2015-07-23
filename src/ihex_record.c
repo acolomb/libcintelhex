@@ -108,7 +108,8 @@ int ihex_rs_iterate_data(ihex_recordset_t* rs, uint_t *i, ihex_record_t **rec, u
 				
 				break;
 			case IHEX_ELA:
-				offset = (x->ihr_data[0] << 24) + (x->ihr_data[1] << 16);
+				offset = ((uint32_t) x->ihr_data[0] << 24)
+					+ ((uint32_t) x->ihr_data[1] << 16);
 				if (off)
 				{
 					*off = offset;
