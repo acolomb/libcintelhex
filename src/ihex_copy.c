@@ -108,9 +108,6 @@ int ihex_byte_copy(ihex_recordset_t *rs, char *dst, size_t n, size_t off)
 		r = ihex_rs_iterate_data(rs, &i, &x, &offset);
 		if (r) return r;
 		
-		address = (offset + x->ihr_address);
-		if (address < min) min = address;
-		
 		if (x == 0) {
 			if (off + n < min || off >= max)
 			{
@@ -121,6 +118,8 @@ int ihex_byte_copy(ihex_recordset_t *rs, char *dst, size_t n, size_t off)
 			break;
 		}
 		
+		address = (offset + x->ihr_address);
+		if (address < min) min = address;
 		if (address + x->ihr_length > max) max = address + x->ihr_length;
 		// Skip record if its last address lies before the target range
 		if (address + x->ihr_length < off) break;
